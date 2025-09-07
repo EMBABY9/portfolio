@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abdelrahman Hossam Embaby - Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-bg: #ffffff;
+      --secondary-bg: #f8f9fa;
+      --accent-blue: #2563eb;
+      --accent-purple: #7c3aed;
+      --accent-green: #10b981;
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --text-light: #9ca3af;
+      --shadow: 0 10px 25px rgba(0,0,0,0.1);
+      --shadow-hover: 0 20px 40px rgba(0,0,0,0.15);
+      --border-radius: 12px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--primary-bg);
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    .hero-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      z-index: -2;
+    }
+
+    .hero-bg::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="40" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="10" cy="80" r="0.5" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+      opacity: 0.3;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+      z-index: 1000;
+      transition: var(--transition);
+    }
+
+    nav.scrolled {
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: var(--shadow);
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 70px;
+    }
+
+    .nav-logo {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      list-style: none;
+      gap: 30px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 500;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent-blue);
+      transition: var(--transition);
+    }
+
+    .nav-links a:hover::after,
+    .nav-links a.active::after {
+      width: 100%;
+    }
+
+    /* Hero Section */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      color: white;
+    }
+
+    .hero-content {
+      max-width: 600px;
+    }
+
+    .hero-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 3.5rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      line-height: 1.1;
+    }
+
+    .letter {
+      display: inline-block;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+      color: var(--accent-blue);
+      font-size: 4.5rem;
+      font-weight: 900;
+    }
+
+    .hero-subtitle {
+      font-size: 1.25rem;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+    }
+
+    .hero-description {
+      font-size: 1.1rem;
+      margin-bottom: 2.5rem;
+      line-height: 1.7;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 15px 30px;
+      border-radius: var(--border-radius);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #1d4ed8;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: white;
+      border: 2px solid white;
+    }
+
+    .btn-secondary:hover {
+      background: white;
+      color: var(--accent-blue);
+      transform: translateY(-2px);
+    }
+
+    /* Sections */
+    section {
+      padding: 100px 0;
+    }
+
+    .section-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 3rem;
+      color: var(--text-primary);
+    }
+
+    .section-title::after {
+      content: '';
+      display: block;
+      width: 60px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+      margin: 1rem auto 0;
+      border-radius: 2px;
+    }
+
+    /* About Section */
+    .about {
+      background: var(--secondary-bg);
+    }
+
+    .about-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .about-text h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: var(--text-primary);
+    }
+
+    .about-text p {
+      font-size: 1.1rem;
+      line-height: 1.7;
+      margin-bottom: 2rem;
+      color: var(--text-secondary);
+    }
+
+    .about-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 30px;
+      margin-top: 2rem;
+    }
+
+    .stat-item {
+      text-align: center;
+      padding: 20px;
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+    }
+
+    .stat-number {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* Skills Section */
+    .skills-section {
+      background: white;
+    }
+
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 40px;
+    }
+
+    .skill-category {
+      background: var(--secondary-bg);
+      padding: 30px;
+      border-radius: var(--border-radius);
+      transition: var(--transition);
+    }
+
+    .skill-category:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .skill-category h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .skill-category h3 i {
+      color: var(--accent-blue);
+    }
+
+    .skill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .skill-tag {
+      background: white;
+      color: var(--text-primary);
+      padding: 8px 16px;
+      border-radius: 25px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border: 1px solid #e5e7eb;
+      transition: var(--transition);
+    }
+
+    .skill-tag:hover {
+      background: var(--accent-blue);
+      color: white;
+      transform: scale(1.05);
+    }
+
+    /* Experience Section */
+    .experience-section {
+      background: var(--secondary-bg);
+    }
+
+    .timeline {
+      position: relative;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 30px;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: linear-gradient(to bottom, var(--accent-blue), var(--accent-purple));
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 50px;
+      padding-left: 80px;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: 20px;
+      top: 20px;
+      width: 25px;
+      height: 25px;
+      background: white;
+      border: 3px solid var(--accent-blue);
+      border-radius: 50%;
+      box-shadow: var(--shadow);
+    }
+
+    .timeline-content {
+      background: white;
+      padding: 30px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+    }
+
+    .timeline-content:hover {
+      transform: translateX(10px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .timeline-content h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+
+    .timeline-date {
+      color: var(--accent-blue);
+      font-weight: 600;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .timeline-content p {
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* Portfolio Section */
+    .portfolio-section {
+      background: white;
+    }
+
+    .portfolio-slider {
+      position: relative;
+      max-width: 900px;
+      margin: 0 auto;
+      overflow: hidden;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+    }
+
+    .slider-container {
+      display: flex;
+      transition: var(--transition);
+    }
+
+    .portfolio-item {
+      min-width: 100%;
+      position: relative;
+    }
+
+    .portfolio-item img {
+      width: 100%;
+      height: 500px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .portfolio-item .caption {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+      padding: 40px 30px 30px;
+      color: white;
+    }
+
+    .caption h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .caption p {
+      opacity: 0.9;
+      font-size: 1rem;
+    }
+
+    .slider-controls {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 10;
+    }
+
+    .slider-btn {
+      background: rgba(255,255,255,0.9);
+      border: none;
+      color: var(--text-primary);
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: var(--transition);
+      box-shadow: var(--shadow);
+    }
+
+    .slider-btn:hover {
+      background: white;
+      transform: scale(1.1);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .slider-indicators {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 10;
+    }
+
+    .indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .indicator.active {
+      background: white;
+      transform: scale(1.2);
+    }
+
+    /* Resume Section */
+    .resume-section {
+      background: var(--secondary-bg);
+      text-align: center;
+    }
+
+    .resume-content {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .resume-content h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+
+    .resume-content p {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+    }
+
+    /* Projects Section */
+    .projects-section {
+      background: white;
+    }
+
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 30px;
+    }
+
+    .project-card {
+      background: var(--secondary-bg);
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      transition: var(--transition);
+      box-shadow: var(--shadow);
+    }
+
+    .project-card:hover {
+      transform: translateY(-10px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .project-image {
+      height: 200px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 3rem;
+    }
+
+    .project-content {
+      padding: 25px;
+    }
+
+    .project-content h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+
+    .project-content p {
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    .project-content .btn {
+      padding: 10px 20px;
+      font-size: 0.9rem;
+    }
+
+    /* Footer */
+    footer {
+      background: var(--text-primary);
+      color: white;
+      padding: 40px 0;
+      text-align: center;
+    }
+
+    footer p {
+      opacity: 0.8;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+      }
+
+      .hero-title {
+        font-size: 2.5rem;
+      }
+
+      .hero-subtitle {
+        font-size: 1.1rem;
+      }
+
+      .about-content {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+
+      .about-stats {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .skills-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+      }
+
+      .timeline {
+        padding-left: 20px;
+      }
+
+      .timeline-item {
+        padding-left: 60px;
+      }
+
+      .timeline-item::before {
+        left: 10px;
+      }
+
+      .projects-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .btn {
+        width: 100%;
+        max-width: 300px;
+        justify-content: center;
+      }
+    }
+
+    /* Scroll Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in-up {
+      animation: fadeInUp 0.6s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <!-- Hero Background -->
+  <div class="hero-bg"></div>
+
+  <!-- Navigation -->
+  <nav id="navbar">
+    <div class="nav-container">
+      <a href="#home" class="nav-logo">Abdelrahman</a>
+      <ul class="nav-links">
+        <li><a href="#home">Home</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#skills">Skills</a></li>
+        <li><a href="#experience">achievements</a></li>
+        <li><a href="#training">Training</a></li>
+        <li><a href="#portfolio">Certificates</a></li>
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#resume">Resume</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section id="home" class="hero">
+    <div class="container">
+      <div class="hero-content">
+<h1 class="hero-title">
+   <span class="letter">A</span><span class="letter">b</span><span class="letter">d</span><span class="letter">a</span><span class="letter">l</span><span class="letter">r</span><span class="letter">a</span><span class="letter">h</span><span class="letter">m</span><span class="letter">a</span><span class="letter">n</span><br>
+   <span class="letter">E</span><span class="letter">m</span><span class="letter">b</span><span class="letter">a</span><span class="letter">b</span><span class="letter">y</span>
+</h1>
+
+<script>
+  // Animate the letters to appear and disappear in order
+  document.addEventListener('DOMContentLoaded', () => {
+    const letters = document.querySelectorAll('.letter');
+    let phase = 'fadeIn';
+    let currentIndex = 0;
+
+    function animate() {
+      if (phase === 'fadeIn') {
+        if (currentIndex < letters.length) {
+          letters[currentIndex].style.opacity = '1';
+          currentIndex++;
+        } else {
+          phase = 'fadeOut';
+          currentIndex = 0;
+        }
+      } else if (phase === 'fadeOut') {
+        if (currentIndex < letters.length) {
+          letters[currentIndex].style.opacity = '0';
+          currentIndex++;
+        } else {
+          phase = 'fadeIn';
+          currentIndex = 0;
+        }
+      }
+    }
+
+    setInterval(animate, 150); // Adjust speed as needed
+  });
+</script>
+        <p class="hero-subtitle">GIS  Full stack </p>
+        <p class="hero-description">
+           GIS Full Stack Developer skilled in AI-powered satellite image processing, interactive web applications
+           geospatial data analysis across GIS platforms, and AutoCAD.
+        </p>
+        <div class="cta-buttons">
+          <a href="#portfolio" class="btn btn-primary">
+            <i class="fas fa-eye"></i> View My Work
+          </a>
+<a href="mailto:abdelrahmanembaby6@gmail.com?subject=Contact%20from%20Portfolio&body=Hello%20Abdelrahman%2C%0D%0A%0D%0AI%20would%20like%20to%20get%20in%20touch%20with%20you." class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
+  <i class="fas fa-envelope"></i> Get In Touch
+</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section id="about" class="about">
+    <div class="container">
+      <h2 class="section-title">About Me</h2>
+      <div class="about-content">
+        <div class="about-text">
+          <h3>Driven by Innovation</h3>
+          <p>
+          "I am a GIS Developer and Specialist with strong expertise in GIS software, AutoCAD, Excel, and Access.
+          I also have hands-on experience in field surveying using Total Station and Level instruments.
+            Passionate about creating interactive geospatial projects, analyzing spatial data, 
+          and developing web applications that make geospatial information accessible and user-friendly
+          </p>
+          <p>
+            My journey involves pushing the boundaries of remote sensing technology while maintaining
+            a strong focus on user experience and performance optimization.
+          </p>
+          <div class="about-stats">
+            <div class="stat-item">
+              <div class="stat-number">3+</div>
+              <div class="stat-label">Years Experience</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number">1+</div>
+              <div class="stat-label">Project Completed</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number">5+</div>
+              <div class="stat-label">Technologies Mastered</div>
+            </div>
+          </div>
+        </div>
+          <div class="about-image">
+<img src="image.png" alt="Abdelrahman Embaby" style="width: 300px; height: 300px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto;">
+          </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Skills Section -->
+  <section id="skills" class="skills-section">
+    <div class="container">
+      <h2 class="section-title">Skills & Expertise</h2>
+      <div class="skills-grid">
+        <div class="skill-category">
+          <h3><i class="fas fa-code"></i> Programming Languages & Libraries / Tools</h3>
+          <div class="skill-list">
+            <span class="skill-tag">Python</span>
+            <span class="skill-tag">JavaScript</span>
+            <span class="skill-tag">HTML/CSS</span>
+            <span class="skill-tag">C#</span>
+            <span class="skill-tag">Pandas</span>
+            <span class="skill-tag">NumPy</span>
+            <span class="skill-tag">nlp</span>
+            <span class="skill-tag">pytorch</span>
+            <span class="skill-tag">Matplotlib</span>
+            <span class="skill-tag">Geopandas</span>
+            <span class="skill-tag">Rasterio</span>
+            <span class="skill-tag">Leaflet.js</span>
+            <span class="skill-tag">LangChain</span>
+            <span class="skill-tag">WhiteboxTools</span>
+            <span class="skill-tag">OS</span>
+            <span class="skill-tag">Glob</span>
+          </div>
+        </div>
+        
+        <div class="skill-category">
+          <h3><i class="fas fa-cogs"></i> Technologies</h3>
+          <div class="skill-list">
+            <span class="skill-tag">ArcGIS Pro</span>
+            <span class="skill-tag">ArcMap</span>
+            <span class="skill-tag">ERDAS Imagine</span>
+            <span class="skill-tag">AutoCAD</span>
+            <span class="skill-tag">VS Code</span>
+            <span class="skill-tag">PyCharm</span>
+            <span class="skill-tag">Curser</span>
+            <span class="skill-tag">Black Box</span>
+            <span class="skill-tag">GitHub</span>
+            <span class="skill-tag">Word</span>
+            <span class="skill-tag">Excel</span>
+            <span class="skill-tag">PowerPoint</span>
+            <span class="skill-tag">Access</span>
+          </div>
+        </div>
+        
+        <div class="skill-category">
+          <h3><i class="fas fa-rocket"></i> Specializations</h3>
+          <div class="skill-list">
+            <span class="skill-tag">Satellite Image Analysis</span>
+            <span class="skill-tag">Remote Sensing</span>
+            <span class="skill-tag">AI/ML</span>
+            <span class="skill-tag">Geospatial Data</span>
+            <span class="skill-tag">Spatial Analysis</span>
+            <span class="skill-tag">Interactive Mapping</span>
+            <span class="skill-tag">Web Development</span>
+            <span class="skill-tag">Field Surveying</span>
+            <span class="skill-tag">Data Visualization</span>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+ <!-- Experience Section -->
+<section id="experience" class="experience-section">
+  <div class="container">
+    <h2 class="section-title"> Achievements</h2>
+    <div class="timeline">
+      
+      <div class="timeline-item">
+        <div class="timeline-content">
+          <h3>SIMBA GIS Assistant</h3>
+          <p class="timeline-date">2025 - Present</p>
+          <p>Developed advanced satellite image analysis tools with AI integration, creating interactive web applications for geospatial data processing and visualization. Applied GIS software (ArcGIS Pro, ArcMap, ERDAS Imagine) and field surveying tools.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-content">
+          <h3>1st Place – Arathon 2 Competition</h3>
+          <p class="timeline-date">2025</p>
+          <p>Awarded first place for the SIMBA GIS Assistant graduation project at the Faculty of Arts, Ain Shams University.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-content">
+          <h3>Introductory Lecture on GEO AI</h3>
+          <p class="timeline-date">2025</p>
+          <p>Delivered a lecture at the Egyptian Geographical Society introducing GEO AI concepts and applications.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Training Section -->
+<section id="training" class="experience-section">
+  <div class="container">
+    <h2 class="section-title">Training & Internships</h2>
+    <div class="timeline">
+
+      <div class="timeline-item">
+        <div class="timeline-content">
+          <h3>Training at Arab Contractors Company</h3>
+          <p class="timeline-date">2022</p>
+          <p>Completed comprehensive training in surveying techniques using Total Station and Level instruments. Gained hands-on experience in field surveying, data collection, and precision measurements for construction and engineering projects.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-content">
+          <h3>Training at Geomakani</h3>
+          <p class="timeline-date">2024</p>
+          <p>Specialized training in Remote Sensing (RS) technologies and applications. Learned advanced techniques for satellite image processing, geospatial data analysis, and remote sensing data interpretation for environmental and urban planning projects.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+  <!-- Portfolio Section -->
+  <section id="portfolio" class="portfolio-section">
+    <div class="container">
+      <h2 class="section-title">Certificates</h2>
+      <div class="portfolio-slider">
+        <div class="slider-container">
+          <div class="portfolio-item">
+            <img src="1719131341554.jpeg" alt="Certificate 1">
+            <div class="caption">
+              <h3>Certificate 1</h3>
+              <p>GIS fundamentals from (GEOMATICS SCADEMY)</p>
+            </div>
+          </div>
+          <div class="portfolio-item">
+            <img src="1756477423272.jpeg" alt="Certificate 2">
+            <div class="caption">
+              <h3>Certificate 2</h3>
+              <p>Delivered an introductory lecture on GEO AI at (the Egyptian Geographical Society)</p>
+            </div>
+          </div>
+          <div class="portfolio-item">
+            <img src="1756477787361.jpeg" alt="Certificate 3">
+            <div class="caption">
+              <h3>Certificate 3</h3>
+              <p>1st Place in Arathon 2 Competition for Graduation Projects at Faculty of Arts
+                Ain Shams University 
+                with the SIMBA GIS Assistant project.</p>
+            </div>
+          </div>
+          <div class="portfolio-item">
+            <img src="Abd_Alrahman_Embaby20240617-72-1fa9ugp.jpg" alt="Professional Profile">
+            <div class="caption">
+              <h3>Certificate 4</h3>
+              <p>introduction to nlp (greate learning)</p>
+            </div>
+          </div>
+          <div class="portfolio-item">
+            <img src="لقطة شاشة 2025-07-04 153514.png" alt="Application Screenshot 1">
+            <div class="caption">
+              <h3>Certificate 5 </h3>
+              <p>arc pro basics (esri)</p>
+            </div>
+          </div>
+          <div class="portfolio-item">
+            <img src="لقطة شاشة 2025-07-04 153614.png" alt="Application Screenshot 2">
+            <div class="caption">
+              <h3>Certificate 6</h3>
+              <p>Getting Started with Imagery and RS (esri)</p>
+            </div>
+          </div>
+        </div>
+        <div class="slider-controls">
+          <button class="slider-btn" id="prevBtn"><i class="fas fa-chevron-left"></i></button>
+          <button class="slider-btn" id="nextBtn"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div class="slider-indicators">
+          <div class="indicator active" data-slide="0"></div>
+          <div class="indicator" data-slide="1"></div>
+          <div class="indicator" data-slide="2"></div>
+          <div class="indicator" data-slide="3"></div>
+          <div class="indicator" data-slide="4"></div>
+          <div class="indicator" data-slide="5"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Resume Section -->
+  <section id="resume" class="resume-section">
+    <div class="container">
+      <div class="resume-content">
+        <h3>Download My Resume</h3>
+        <p>Get a detailed overview of my experience, skills, and achievements in a comprehensive PDF format.</p>
+        <a href="Abdelrahman Hossam Embaby.pdf" download class="btn btn-primary">
+          <i class="fas fa-download"></i> Download Resume (PDF)
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Projects Section -->
+  <section id="projects" class="projects-section">
+    <div class="container">
+      <h2 class="section-title">Featured Projects</h2>
+      <div class="projects-grid">
+        <div class="project-card">
+          <div class="project-image">
+            <i class="fas fa-globe"></i>
+          </div>
+          <div class="project-content">
+            <h3>SIMBA Landing Page</h3>
+            <p>An animated landing page for satellite image analysis with bilingual support and modern UI/UX design.</p>
+            <a href="first .html" class="btn btn-primary">View Project</a>
+          </div>
+        </div>
+        <div class="project-card">
+          <div class="project-image">
+            <i class="fas fa-comments"></i>
+          </div>
+          <div class="project-content">
+            <h3>SIMBA Chat Interface</h3>
+            <p>Interactive chat application for satellite image analysis with AI integration and real-time processing.</p>
+            <a href="chat.html" class="btn btn-primary">View Project</a>
+          </div>
+        </div>
+        <div class="project-card">
+          <div class="project-image">
+            <i class="fas fa-palette"></i>
+          </div>
+          <div class="project-content">
+            <h3>Image Editor</h3>
+            <p>Advanced image editing tool with client-side canvas and server-side processing capabilities.</p>
+            <a href="editor_merged.html" class="btn btn-primary">View Project</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-contact">
+      <p>Contact Abdelrahman</p>
+      <p>Email: <a href="mailto:abdelrahman@example.com">abdelrahmanembaby6@gmail.com</a></p>
+      <p>LinkedIn: <a href="https://www.linkedin.com/in/abdelrhman-hossam-embaby-6285312bb" target="_blank">Abdelrahman Embaby</a></p>
+    </div>
+  </footer>
+  
+
+  <script>
+    // Navigation scroll effect
+    window.addEventListener('scroll', () => {
+      const navbar = document.getElementById('navbar');
+      if (window.scrollY > 100) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+    });
+
+    // Smooth scrolling for navigation links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // Slider functionality
+    function initializeSlider() {
+      const sliderContainer = document.querySelector('.slider-container');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const indicators = document.querySelectorAll('.indicator');
+      let currentSlide = 0;
+      const totalSlides = document.querySelectorAll('.portfolio-item').length;
+
+      function updateSlider() {
+        sliderContainer.style.transform = `translateX(-${currentSlide * 100}%)`;
+        indicators.forEach((indicator, index) => {
+          indicator.classList.toggle('active', index === currentSlide);
+        });
+      }
+
+      function nextSlide() {
+        currentSlide = (currentSlide + 1) % totalSlides;
+        updateSlider();
+      }
+
+      function prevSlide() {
+        currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+        updateSlider();
+      }
+
+      function goToSlide(slideIndex) {
+        currentSlide = slideIndex;
+        updateSlider();
+      }
+
+      // Event listeners
+      nextBtn.addEventListener('click', nextSlide);
+      prevBtn.addEventListener('click', prevSlide);
+
+      indicators.forEach((indicator, index) => {
+        indicator.addEventListener('click', () => goToSlide(index));
+      });
+
+      // Auto slide
+      setInterval(nextSlide, 5000);
+    }
+
+    // Intersection Observer for animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('fade-in-up');
+        }
+      });
+    }, observerOptions);
+
+    // Observe all sections
+    document.querySelectorAll('section').forEach(section => {
+      observer.observe(section);
+    });
+
+    // Initialize on load
+    window.addEventListener('load', () => {
+      initializeSlider();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIMBA - Merged Editor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/geotiff@2.0.7/dist/geotiff.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" crossorigin=""></script>
+
+  <style>
+    :root {
+      --space-dark: #0a0a1a;
+      --space-blue: #1a1a2e;
+      --space-indigo: #16213e;
+      --space-purple: #331b3f;
+      --accent-cyan: #00eeff;
+      --accent-purple: #7b2cbf;
+      --accent-pink: #ff2a6d;
+      --text-primary: #ffffff;
+      --text-secondary: rgba(255, 255, 255, 0.7);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body, html {
+      height: 100%;
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--space-dark);
+      color: var(--text-primary);
+      overflow-x: hidden;
+    }
+
+    .space-background { position: fixed; width: 100vw; height: 100vh; top: 0; left: 0; z-index: -1;
+      background: linear-gradient(45deg, var(--space-dark), var(--space-blue), var(--space-indigo), var(--space-purple));
+      background-size: 400% 400%; animation: gradientBG 15s ease infinite; overflow: hidden; }
+    @keyframes gradientBG { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+    #stars,#stars2,#stars3{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none}
+    .star{position:absolute;background:white;border-radius:50%;z-index:1}
+    .planet{position:absolute;border-radius:50%;filter:drop-shadow(0 0 10px rgba(255,255,255,.2));pointer-events:none;opacity:.7}
+    #sun{width:150px;height:150px;top:5%;left:8%;background:radial-gradient(circle at 30% 40%,#ffd700,#ff4500);box-shadow:0 0 30px #ff4500;animation:float 20s ease-in-out infinite}
+    #mercury{width:15px;height:15px;top:18%;left:18%;background:radial-gradient(circle at 30% 40%,#a0522d,#8b4513);animation:orbit 8s linear infinite, float 15s ease-in-out infinite}
+    #venus{width:25px;height:25px;top:25%;left:25%;background:radial-gradient(circle at 30% 40%,#deb887,#d2691e);animation:orbit 12s linear infinite, float 18s ease-in-out infinite}
+    #earth{width:30px;height:30px;top:35%;left:35%;background:radial-gradient(circle at 30% 40%,#4169e1,#000080);animation:orbit 15s linear infinite, float 20s ease-in-out infinite}
+    #mars{width:20px;height:20px;bottom:10%;right:15%;background:radial-gradient(circle at 30% 40%,#cd5c5c,#8b0000);animation:orbit 20s linear infinite, float 22s ease-in-out infinite}
+    #jupiter{width:80px;height:80px;bottom:5%;left:5%;background:radial-gradient(circle at 30% 40%,#deb887,#8b4513);animation:orbit 30s linear infinite, float 25s ease-in-out infinite}
+    #saturn{width:60px;height:60px;top:15%;right:10%;background:radial-gradient(circle at 30% 40%,#f4a460,#8b4513);animation:orbit 35s linear infinite, float 28s ease-in-out infinite}
+    @keyframes orbit{from{transform:rotate(0deg) translateX(40px) rotate(0deg)} to{transform:rotate(360deg) translateX(40px) rotate(-360deg)}}
+    @keyframes float{0%,100%{transform:translateY(0)} 50%{transform:translateY(-15px)}}
+
+    .container { background: rgba(10,10,26,0.9); backdrop-filter: blur(10px); border-radius: 15px; box-shadow: 0 0 50px rgba(0,238,255,0.3);
+      padding: 25px; margin: 20px auto; width: 95%; max-width: 1300px; min-height: calc(100vh - 40px); display: flex; flex-direction: column; gap: 20px; }
+
+    .header { text-align: center; }
+    .header h1 { font-family: 'Orbitron', sans-serif; font-size: 2.2em; color: var(--accent-cyan); text-shadow: 0 0 15px rgba(0,238,255,0.7); }
+    .header p { color: var(--text-secondary); margin-top: 6px; }
+
+    .actions-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+    .btn { background: linear-gradient(45deg, #00eeff, #00aaff); color: #0a0a1a; border: none; padding: 10px 18px; border-radius: 18px; cursor: pointer; font-weight: 700; box-shadow: 0 5px 15px rgba(0,238,255,0.4); }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,238,255,0.6); }
+
+    .main-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+    @media (min-width: 1024px) { .main-grid { grid-template-columns: 1fr 1fr; } }
+
+    .panel { background: rgba(26,26,46,0.7); border: 1px solid rgba(0,238,255,0.2); border-radius: 10px; padding: 15px; box-shadow: 0 0 20px rgba(0, 238, 255, 0.15); }
+    .panel h2 { font-family: 'Orbitron', sans-serif; font-size: 1.2em; color: var(--accent-cyan); margin-bottom: 10px; }
+
+    .canvas-container { position: relative; background-color: #1a1a2e; border: 2px solid var(--accent-cyan); border-radius: 10px; overflow: hidden; display: flex; align-items: center; justify-content: center; min-height: 380px; max-height: 70vh; }
+    canvas { display: block; max-width: 100%; max-height: 100%; cursor: crosshair; }
+
+    .controls { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+    .control-group { flex: 1 1 250px; background: rgba(10,10,26,0.6); border: 1px solid rgba(0,238,255,0.15); border-radius: 8px; padding: 12px; }
+    .control-group label { color: var(--accent-cyan); font-weight: 700; font-size: 0.9em; display: block; margin-bottom: 6px; }
+    .control-group input[type="range"], .control-group select, .control-group input[type="number"] { width: 100%; background-color: #0a0a1a; border: 1px solid var(--accent-cyan); border-radius: 6px; padding: 8px; color: var(--text-primary); }
+    .control-group .button-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+
+    .legend { margin-top: 10px; background: rgba(10,10,26,0.6); border: 1px solid rgba(0,238,255,0.2); border-radius: 8px; padding: 10px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .legend-item .swatch { width: 14px; height: 14px; border-radius: 50%; border: 1px solid #ccc; }
+
+    .message-inline { margin-top: 10px; padding: 10px; border-radius: 8px; border: 1px solid rgba(0,238,255,0.25); background: rgba(0,238,255,0.08); color: #b9f6ff; display: none; }
+    .message-inline.error { border-color: rgba(255, 82, 82, 0.5); background: rgba(255, 82, 82, 0.08); color: #ffbaba; }
+
+    .loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--accent-cyan); border-radius: 50%; width: 36px; height: 36px; animation: spin 1s linear infinite; display: none; margin: 10px auto; }
+    @keyframes spin { 0%{transform: rotate(0)} 100%{transform: rotate(360deg)} }
+
+    .selection-box { position: absolute; border: 2px dashed #ffcc00; background-color: rgba(255,204,0,0.2); pointer-events: none; }
+
+    /* Message Box Overlay (reused) */
+    .message-box-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+    .message-box { background: #1a1a2e; color: #e2e8f0; padding: 26px; border-radius: 14px; box-shadow: 0 0 30px rgba(0,238,255,0.5); text-align: center; border: 2px solid #00eeff; }
+    .message-box h3 { margin-top: 0; color: #00eeff; font-size: 1.3em; margin-bottom: 12px; }
+
+    /* Map */
+    #map-container { width: 100%; height: 380px; background-color: #1a1a2e; border: 2px solid var(--accent-cyan); border-radius: 10px; box-shadow: 0 0 20px rgba(0, 238, 255, 0.4); display: none; overflow: hidden; }
+    #map { width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <div class="space-background">
+    <div id="stars"></div>
+    <div id="stars2"></div>
+    <div id="stars3"></div>
+    <div id="sun" class="planet"></div>
+    <div id="mercury" class="planet"></div>
+    <div id="venus" class="planet"></div>
+    <div id="earth" class="planet"></div>
+    <div id="mars" class="planet"></div>
+    <div id="jupiter" class="planet"></div>
+    <div id="saturn" class="planet"></div>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <h1>SIMBA Image Editor</h1>
+      <div class="actions-row">
+        <input type="file" id="imageUpload" accept="image/*, .tif, .tiff" style="display:none" />
+        <button class="btn" id="uploadNewImageButton">Upload  image (jpg,png)</button>
+        <input type="file" id="fileInputBackend" accept=".tif,.tiff" style="display:none" />
+        <button class="btn" id="uploadTiffButton">Upload TIFF</button>
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <!-- Left: Canvas editor (client-side) -->
+      <div class="panel">
+        <h2>Canvas Editor</h2>
+        <div class="canvas-container" id="canvasContainer">
+          <button class="btn" id="canvasPanMapButton" style="position:absolute;top:12px;left:12px;z-index:10;">Pan الخريطة</button>
+          <canvas id="imageCanvas"></canvas>
+        </div>
+        <div class="controls">
+          <div class="control-group">
+            <label>Color Adjustments</label>
+            <label for="brightness">Brightness</label>
+            <input type="range" id="brightness" min="-100" max="100" value="0" />
+            <div class="button-row">
+              <button class="btn" id="applyAdjustmentsButton">Apply</button>
+              <button class="btn" id="invertColorsButton">Invert</button>
+            </div>
+          </div>
+
+          
+
+          <div class="control-group">
+            <label for="colorizeSelect">Color Map (Local)</label>
+            <select id="colorizeSelect">
+              <option value="none">Original / None</option>
+              <option value="jet">Jet</option>
+              <option value="viridis">Viridis</option>
+              <option value="grayscale">Grayscale</option>
+              <option value="hot">Hot</option>
+              <option value="cool">Cool</option>
+            </select>
+            <div class="button-row"><button class="btn" id="applyColorMapButtonLocal">Apply</button></div>
+          </div>
+
+          <div class="control-group">
+            <label>Cropping & Geometric</label>
+            <p style="color:var(--text-secondary);font-size:0.9em;">Drag to select an area, then Crop.</p>
+            <div class="button-row">
+              <button class="btn" id="cropButton">Crop</button>
+              <button class="btn" id="rotateButton">Rotate 90°</button>
+            </div>
+            <div class="button-row">
+              <button class="btn" id="flipHorizontalButton">Flip Horizontal</button>
+              <button class="btn" id="resetCanvasButton">Reset</button>
+            </div>
+          </div>
+
+          
+
+          <div class="control-group">
+            <label>Zoom</label>
+            <div class="button-row">
+              <button class="btn" id="zoomInButton">Zoom In</button>
+              <button class="btn" id="zoomOutButton">Zoom Out</button>
+              <button class="btn" id="toggleMapButton">Toggle Map</button>
+              <button class="btn" id="panMapButton">Pan</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align:center;margin-top:10px;">
+          <button class="btn" id="saveButton">Download Edited Image (PNG)</button>
+        </div>
+
+        <div id="map-container"><div id="map"></div></div>
+      </div>
+
+      <!-- Right: Server tools (from edit.html) -->
+      <div class="panel">
+        <h2>Server Processing</h2>
+
+        <div class="control-group">
+          <label>Clip Image</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div>
+              <label for="clipMinX">Min X</label>
+              <input type="number" id="clipMinX" placeholder="0" />
+            </div>
+            <div>
+              <label for="clipMinY">Min Y</label>
+              <input type="number" id="clipMinY" placeholder="0" />
+            </div>
+            <div>
+              <label for="clipMaxX">Max X</label>
+              <input type="number" id="clipMaxX" placeholder="100" />
+            </div>
+            <div>
+              <label for="clipMaxY">Max Y</label>
+              <input type="number" id="clipMaxY" placeholder="100" />
+            </div>
+          </div>
+          <div class="button-row"><button class="btn" id="clipButton">Apply Clip</button></div>
+        </div>
+
+        <div class="control-group">
+          <label>Classification</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div>
+              <label for="numClasses">Number of Classes</label>
+              <input type="number" id="numClasses" value="5" min="2" max="20" />
+            </div>
+            <div>
+              <label for="classificationMethod">Method</label>
+              <select id="classificationMethod">
+                <option value="kmeans">K-Means</option>
+                <option value="jenks">Jenks</option>
+              </select>
+            </div>
+          </div>
+          <div class="button-row"><button class="btn" id="classifyButton">Apply Classification</button></div>
+          <div id="classificationLegend" class="legend" style="display:none;"></div>
+        </div>
+
+        <div class="control-group">
+          <label for="colorMapSelectServer">Color Map (Server)</label>
+          <select id="colorMapSelectServer">
+            <option value="viridis">Viridis</option>
+            <option value="plasma">Plasma</option>
+            <option value="inferno">Inferno</option>
+            <option value="magma">Magma</option>
+            <option value="cividis">Cividis</option>
+            <option value="gray">Grayscale</option>
+            <option value="jet">Jet</option>
+          </select>
+          <div class="button-row"><button class="btn" id="applyColorMapButtonServer">Apply Server Color Map</button></div>
+        </div>
+
+        <div class="control-group">
+          <label>Server Preview</label>
+          <div id="serverPreviewWrapper" style="position:relative;border:1px solid rgba(0,238,255,0.2);border-radius:8px;min-height:220px;display:flex;align-items:center;justify-content:center;background:#0f0f1f;overflow:hidden;">
+            <img id="processedImagePreview" alt="Processed Preview" style="max-width:100%;height:auto;display:none;border-radius:6px;user-select:none;-webkit-user-drag:none;" />
+            <div id="serverSelectionBox" class="selection-box" style="display:none;"></div>
+            <p id="processedPlaceholder" style="color:var(--text-secondary);">Processed image will appear here.</p>
+          </div>
+          <div class="loader" id="loadingProcessed"></div>
+          <div class="message-inline" id="processedMessageBox"></div>
+          <div style="text-align:center;margin-top:10px;">
+            <button class="btn" id="downloadButton" disabled>Download Processed TIFF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Background stars animation =====
+    function createStars(){
+      const layers=[{id:'stars',count:200,size:[1,2],opacity:[0.4,0.7]},{id:'stars2',count:100,size:[2,3],opacity:[0.7,0.9]},{id:'stars3',count:50,size:[3,4],opacity:[0.8,1]}];
+      layers.forEach(layer=>{const container=document.getElementById(layer.id); if(!container) return; for(let i=0;i<layer.count;i++){const star=document.createElement('div'); const size=Math.random()*(layer.size[1]-layer.size[0])+layer.size[0]; star.className='star'; star.style.width=`${size}px`; star.style.height=`${size}px`; star.style.background=`rgba(255,255,255,${Math.random()*(layer.opacity[1]-layer.opacity[0])+layer.opacity[0]})`; star.style.boxShadow=`0 0 ${size*2}px rgba(255,255,255,0.8)`; star.style.top=`${Math.random()*100}%`; star.style.left=`${Math.random()*100}%`; star.style.animation=`twinkle ${Math.random()*5+3}s linear infinite alternate`; container.appendChild(star);} });
+      const style=document.createElement('style'); style.innerHTML='@keyframes twinkle{0%{opacity:.2;transform:scale(.8)}100%{opacity:1;transform:scale(1)}}'; document.head.appendChild(style);
+    }
+
+    // ===== Message overlay =====
+    function showMessageBox(title, message){
+      const overlay=document.createElement('div'); overlay.className='message-box-overlay';
+      const box=document.createElement('div'); box.className='message-box';
+      const h=document.createElement('h3'); h.textContent=title; const p=document.createElement('p'); p.textContent=message;
+      const btn=document.createElement('button'); btn.className='btn'; btn.textContent='OK'; btn.onclick=()=>document.body.removeChild(overlay);
+      box.appendChild(h); box.appendChild(p); box.appendChild(btn); overlay.appendChild(box); document.body.appendChild(overlay);
+    }
+
+    // ===== Client-side editor (from editor.html) =====
+    const canvas=document.getElementById('imageCanvas');
+    const ctx=canvas.getContext('2d', { willReadFrequently: true });
+    const canvasContainer=document.getElementById('canvasContainer');
+    const imageUploadInput=document.getElementById('imageUpload');
+    const uploadNewImageButton=document.getElementById('uploadNewImageButton');
+    const colorizeSelect=document.getElementById('colorizeSelect');
+    const applyColorMapButtonLocal=document.getElementById('applyColorMapButtonLocal');
+    const cropButton=document.getElementById('cropButton');
+    const resetCanvasButton=document.getElementById('resetCanvasButton');
+    const saveButton=document.getElementById('saveButton');
+    const brightnessControl=document.getElementById('brightness');
+    const applyAdjustmentsButton=document.getElementById('applyAdjustmentsButton');
+    const invertColorsButton=document.getElementById('invertColorsButton');
+    const rotateButton=document.getElementById('rotateButton');
+    const flipHorizontalButton=document.getElementById('flipHorizontalButton');
+    
+    const zoomInButton=document.getElementById('zoomInButton');
+    const zoomOutButton=document.getElementById('zoomOutButton');
+    const toggleMapButton=document.getElementById('toggleMapButton');
+    const panMapButton = document.getElementById('panMapButton');
+    const mapContainer=document.getElementById('map-container');
+    let map=null;
+
+    let originalImage=new Image();
+    let currentImageBuffer=null; // ImageData
+    let currentScale=1, zoomStep=0.1, minScale=0.1, maxScale=5;
+    let isCropping=false, cropStartX=0, cropStartY=0, cropRect={x:0,y:0,width:0,height:0}, selectionBox=null;
+    let isCanvasPanning = false;
+    let panStart = {x: 0, y: 0};
+    let panOffset = {x: 0, y: 0};
+    let isPanning = false;
+
+    function resizeCanvasToFitContainer(){ if(!originalImage.src) return; const aspect=originalImage.width/originalImage.height; const cw=canvasContainer.offsetWidth; const ch=canvasContainer.offsetHeight; let w=cw, h=w/aspect; if(h>ch){h=ch; w=h*aspect;} canvas.style.width=`${w}px`; canvas.style.height=`${h}px`; }
+
+    function redrawCanvasWithCurrentState(){ if(!currentImageBuffer) return; ctx.save(); ctx.clearRect(0,0,canvas.width,canvas.height); const scaledW=currentImageBuffer.width*currentScale; const scaledH=currentImageBuffer.height*currentScale; const offX=(canvas.width - scaledW)/2; const offY=(canvas.height - scaledH)/2; const tmp=document.createElement('canvas'); const tctx=tmp.getContext('2d', { willReadFrequently: true }); tmp.width=currentImageBuffer.width; tmp.height=currentImageBuffer.height; tctx.putImageData(currentImageBuffer,0,0); ctx.drawImage(tmp, offX + panOffset.x, offY + panOffset.y, scaledW, scaledH); ctx.restore(); }
+
+    function resetControls(){ brightnessControl.value=0; colorizeSelect.value='none'; }
+
+    function resetCanvas(){ if(originalImage.src){ canvas.width=originalImage.width; canvas.height=originalImage.height; ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(originalImage,0,0); currentImageBuffer=ctx.getImageData(0,0,canvas.width,canvas.height); currentScale=1; resizeCanvasToFitContainer(); redrawCanvasWithCurrentState(); removeSelectionBox(); resetControls(); } else { showMessageBox('No Image','No image to load.'); } }
+
+    function loadImageOnCanvas(url){ originalImage.onload=()=>{ canvas.width=originalImage.width; canvas.height=originalImage.height; ctx.drawImage(originalImage,0,0); currentImageBuffer=ctx.getImageData(0,0,canvas.width,canvas.height); currentScale=1; resizeCanvasToFitContainer(); redrawCanvasWithCurrentState(); resetControls(); }; originalImage.onerror=()=>showMessageBox('Load Error','Failed to load image.'); originalImage.src=url; }
+
+    async function loadImageFromFile(file){ const isTiff=file.type==='image/tiff'||file.name.toLowerCase().endsWith('.tif')||file.name.toLowerCase().endsWith('.tiff'); function readFile(){ return new Promise((resolve,reject)=>{ const reader=new FileReader(); reader.onload=e=>resolve(e.target.result); reader.onerror=e=>reject(new Error('File reading error: '+e.target.error)); if(isTiff) reader.readAsArrayBuffer(file); else reader.readAsDataURL(file); }); }
+      try{ const content=await readFile(); if(isTiff){ const tiff=await GeoTIFF.fromArrayBuffer(content); const image=await tiff.getImage(); const width=image.getWidth(), height=image.getHeight(); let geoData=null; if(image.getFileDirectory().GeoKeyDirectoryTag){ try{ const bbox=image.getBoundingBox(); if(bbox){ geoData={minX:bbox[0],minY:bbox[1],maxX:bbox[2],maxY:bbox[3]}; } }catch(e){ console.warn('Geo info error',e);} }
+        let rgba; try{ rgba=await image.readRGBA(); } catch(e){ const rasters=await image.readRasters(); if(!rasters||!rasters.length) throw new Error('No raster data'); rgba=new Uint8Array(width*height*4); const band=rasters[0]; const max=Math.max(...band), min=Math.min(...band), range=max-min; for(let i=0;i<band.length;i++){ let v=band[i]; v = range>0 ? ((v-min)/range)*255 : 0; const p=i*4; rgba[p]=v; rgba[p+1]=v; rgba[p+2]=v; rgba[p+3]=255; } }
+        const tmp=document.createElement('canvas'); tmp.width=width; tmp.height=height; const tctx=tmp.getContext('2d', { willReadFrequently: true }); const imgData=new ImageData(new Uint8ClampedArray(rgba), width, height); tctx.putImageData(imgData,0,0); originalImage.src=tmp.toDataURL('image/png'); originalImage.onload=()=>{ canvas.width=originalImage.width; canvas.height=originalImage.height; ctx.drawImage(originalImage,0,0); currentImageBuffer=ctx.getImageData(0,0,canvas.width,canvas.height); currentScale=1; resizeCanvasToFitContainer(); redrawCanvasWithCurrentState(); resetControls(); if(geoData) initializeMapWithGeoData(geoData); else { if(map){ map.remove(); map=null; } mapContainer.style.display='none'; } };
+      } else { originalImage.onload=()=>{ canvas.width=originalImage.width; canvas.height=originalImage.height; ctx.drawImage(originalImage,0,0); currentImageBuffer=ctx.getImageData(0,0,canvas.width,canvas.height); currentScale=1; resizeCanvasToFitContainer(); redrawCanvasWithCurrentState(); resetControls(); if(map){ map.remove(); map=null; } mapContainer.style.display='none'; }; originalImage.onerror=()=>showMessageBox('Load Error','Failed to load image.'); originalImage.src=content; }
+      } catch(err){ console.error(err); showMessageBox('Image Load Error', err.message); }
+    }
+
+    const colormaps={
+      jet:(v)=>{const n=v/255;let r,g,b; if(n<0.25){r=0;g=n*4*255;b=255;} else if(n<0.5){r=0;g=255;b=(1-(n-0.25)*4)*255;} else if(n<0.75){r=(n-0.5)*4*255;g=255;b=0;} else {r=255;g=(1-(n-0.75)*4)*255;b=0;} return [r|0,g|0,b|0];},
+      viridis:(v)=>{const n=v/255; const r=Math.round(255*(0.247+0.04*Math.sin(n*Math.PI*4))); const g=Math.round(255*(0.428+0.1*Math.cos(n*Math.PI*4))); const b=Math.round(255*(0.641+0.08*Math.sin(n*Math.PI*2))); return [r,g,b];},
+      grayscale:(v)=>[v,v,v], hot:(v)=>{const n=v/255; let r,g,b; if(n<.33){r=n*3*255;g=0;b=0;} else if(n<.66){r=255;g=(n-.33)*3*255;b=0;} else {r=255;g=255;b=(n-.66)*3*255;} return [r|0,g|0,b|0];},
+      cool:(v)=>{const n=v/255; return [Math.round(255*n), Math.round(255*(1-n)), 255];}
+    };
+
+    function applyColorMapLocal(){ if(!currentImageBuffer){ showMessageBox('No Image','Load an image first.'); return; } const tmp=document.createElement('canvas'); const tctx=tmp.getContext('2d', { willReadFrequently: true }); tmp.width=currentImageBuffer.width; tmp.height=currentImageBuffer.height; tctx.putImageData(ctx.getImageData(0,0,canvas.width,canvas.height),0,0); const imageData=tctx.getImageData(0,0,tmp.width,tmp.height); const pix=imageData.data; const sel=colorizeSelect.value; if(sel==='none'){ currentImageBuffer=ctx.getImageData(0,0,canvas.width,canvas.height); redrawCanvasWithCurrentState(); return; } const fn=colormaps[sel]; if(!fn){ showMessageBox('Error','Invalid colormap.'); return; } for(let i=0;i<pix.length;i+=4){ const gray=(pix[i]+pix[i+1]+pix[i+2])/3; const [r,g,b]=fn(gray); pix[i]=r; pix[i+1]=g; pix[i+2]=b; } currentImageBuffer=imageData; redrawCanvasWithCurrentState(); }
+
+    function applyCurrentAdjustments(){ if(!currentImageBuffer) return; const tmp=document.createElement('canvas'); const tctx=tmp.getContext('2d'); tmp.width=canvas.width; tmp.height=canvas.height; tctx.putImageData(currentImageBuffer,0,0); const imageData=tctx.getImageData(0,0,tmp.width,tmp.height); const pixels=imageData.data; const brightness=parseInt(brightnessControl.value); for(let i=0;i<pixels.length;i+=4){ let r=pixels[i], g=pixels[i+1], b=pixels[i+2]; r+=brightness; g+=brightness; b+=brightness; pixels[i]=Math.min(255,Math.max(0,r)); pixels[i+1]=Math.min(255,Math.max(0,g)); pixels[i+2]=Math.min(255,Math.max(0,b)); }
+      currentImageBuffer=imageData; redrawCanvasWithCurrentState(); }
+
+    function invertColors(){ if(!currentImageBuffer){ showMessageBox('No Image','Load an image first.'); return; } const imageData=ctx.getImageData(0,0,canvas.width,canvas.height); const p=imageData.data; for(let i=0;i<p.length;i+=4){ p[i]=255-p[i]; p[i+1]=255-p[i+1]; p[i+2]=255-p[i+2]; } currentImageBuffer=imageData; redrawCanvasWithCurrentState(); resetControls(); }
+    function rotateImage(){ if(!currentImageBuffer){ showMessageBox('No Image','Load an image first.'); return; } const tmp=document.createElement('canvas'); const tctx=tmp.getContext('2d', { willReadFrequently: true }); tmp.width=canvas.height; tmp.height=canvas.width; tctx.translate(tmp.width/2,tmp.height/2); tctx.rotate(90*Math.PI/180); const cur=ctx.getImageData(0,0,canvas.width,canvas.height); const srcC=document.createElement('canvas'); const srcX=srcC.getContext('2d', { willReadFrequently: true }); srcC.width=canvas.width; srcC.height=canvas.height; srcX.putImageData(cur,0,0); tctx.drawImage(srcC,-canvas.width/2,-canvas.height/2); canvas.width=tmp.width; canvas.height=tmp.height; currentImageBuffer=tctx.getImageData(0,0,canvas.width,canvas.height); resizeCanvasToFitContainer(); redrawCanvasWithCurrentState(); resetControls(); }
+    function flipHorizontal(){ if(!currentImageBuffer){ showMessageBox('No Image','Load an image first.'); return; } const tmp=document.createElement('canvas'); const tctx=tmp.getContext('2d', { willReadFrequently: true }); tmp.width=canvas.width; tmp.height=canvas.height; const cur=ctx.getImageData(0,0,canvas.width,canvas.height); const srcC=document.createElement('canvas'); const srcX=srcC.getContext('2d', { willReadFrequently: true }); srcC.width=canvas.width; srcC.height=canvas.height; srcX.putImageData(cur,0,0); tctx.translate(tmp.width,0); tctx.scale(-1,1); tctx.drawImage(srcC,0,0); currentImageBuffer=tctx.getImageData(0,0,canvas.width,canvas.height); redrawCanvasWithCurrentState(); resetControls(); }
+
+    function getCanvasMousePos(e){ const rect=canvas.getBoundingClientRect(); const mx=e.clientX-rect.left, my=e.clientY-rect.top; const px=mx*(canvas.width/rect.width), py=my*(canvas.height/rect.height); const scaledW=currentImageBuffer.width*currentScale, scaledH=currentImageBuffer.height*currentScale; const offX=(canvas.width - scaledW)/2, offY=(canvas.height - scaledH)/2; const ix=(px - offX)/currentScale, iy=(py - offY)/currentScale; return { x: Math.max(0, Math.min(ix, currentImageBuffer.width)), y: Math.max(0, Math.min(iy, currentImageBuffer.height)) } }
+    function createSelectionBox(){ if(!selectionBox){ selectionBox=document.createElement('div'); selectionBox.className='selection-box'; canvasContainer.appendChild(selectionBox);} }
+    function updateSelectionBox(){ if(!selectionBox||!currentImageBuffer) return; const x_img=Math.min(cropStartX,cropStartX+cropRect.width); const y_img=Math.min(cropStartY,cropStartY+cropRect.height); const w_img=Math.abs(cropRect.width); const h_img=Math.abs(cropRect.height); const rect=canvas.getBoundingClientRect(); const scaledW=currentImageBuffer.width*currentScale*(rect.width/canvas.width); const scaledH=currentImageBuffer.height*currentScale*(rect.height/canvas.height); const offX=(rect.width - scaledW)/2; const offY=(rect.height - scaledH)/2; selectionBox.style.left=`${(x_img*currentScale*(rect.width/canvas.width))+offX}px`; selectionBox.style.top=`${(y_img*currentScale*(rect.height/canvas.height))+offY}px`; selectionBox.style.width=`${w_img*currentScale*(rect.width/canvas.width)}px`; selectionBox.style.height=`${h_img*currentScale*(rect.height/canvas.height)}px`; }
+    function removeSelectionBox(){ if(selectionBox){ selectionBox.remove(); selectionBox=null; } cropRect={x:0,y:0,width:0,height:0}; }
+
+    canvas.addEventListener('mousedown', e=>{ if(!currentImageBuffer){ showMessageBox('No Image','Load an image first.'); return; } if(isCanvasPanning){ isPanning=true; panStart={x:e.clientX,y:e.clientY}; canvas.style.cursor='grabbing'; return; } isCropping=true; const pos=getCanvasMousePos(e); cropStartX=pos.x; cropStartY=pos.y; cropRect={x:pos.x,y:pos.y,width:0,height:0}; createSelectionBox(); updateSelectionBox(); });
+    canvas.addEventListener('mousemove', e=>{ if(isCanvasPanning){ if(!isPanning) return; const rect=canvas.getBoundingClientRect(); const dx=e.clientX-panStart.x; const dy=e.clientY-panStart.y; panOffset.x += dx * (canvas.width/rect.width); panOffset.y += dy * (canvas.height/rect.height); panStart={x:e.clientX,y:e.clientY}; redrawCanvasWithCurrentState(); return; } if(!isCropping) return; const pos=getCanvasMousePos(e); cropRect.width=pos.x-cropStartX; cropRect.height=pos.y-cropStartY; updateSelectionBox(); });
+    canvas.addEventListener('mouseup', ()=>{ if(isCanvasPanning){ isPanning=false; canvas.style.cursor='grab'; return; } isCropping=false; let nx=Math.min(cropStartX,cropStartX+cropRect.width); let ny=Math.min(cropStartY,cropStartY+cropRect.height); let nw=Math.abs(cropRect.width); let nh=Math.abs(cropRect.height); nx=Math.max(0,Math.min(nx,currentImageBuffer.width)); ny=Math.max(0,Math.min(ny,currentImageBuffer.height)); nw=Math.min(nw,currentImageBuffer.width-nx); nh=Math.min(nh,currentImageBuffer.height-ny); cropRect={x:nx,y:ny,width:nw,height:nh}; if(nw<5||nh<5){ removeSelectionBox(); showMessageBox('Selection Too Small','Please select a larger area.'); } else { updateSelectionBox(); } });
+
+    cropButton.addEventListener('click', ()=>{ if(!currentImageBuffer){ showMessageBox('No Image','Load an image first.'); return; } if(cropRect.width>0 && cropRect.height>0){ const tmp=document.createElement('canvas'); const tctx=tmp.getContext('2d'); tmp.width=cropRect.width; tmp.height=cropRect.height; const srcC=document.createElement('canvas'); const sctx=srcC.getContext('2d'); srcC.width=currentImageBuffer.width; srcC.height=currentImageBuffer.height; sctx.putImageData(currentImageBuffer,0,0); tctx.drawImage(srcC, cropRect.x, cropRect.y, cropRect.width, cropRect.height, 0, 0, cropRect.width, cropRect.height); originalImage.src=tmp.toDataURL(); originalImage.onload=()=>{ canvas.width=originalImage.width; canvas.height=originalImage.height; ctx.drawImage(originalImage,0,0); currentImageBuffer=ctx.getImageData(0,0,canvas.width,canvas.height); currentScale=1; resizeCanvasToFitContainer(); redrawCanvasWithCurrentState(); resetControls(); }; removeSelectionBox(); } else { showMessageBox('Crop Error','Select a valid area first.'); } });
+
+    canvas.addEventListener('wheel', e=>{ e.preventDefault(); if(!currentImageBuffer){ showMessageBox('No Image','Load an image first.'); return; } if(e.deltaY<0) currentScale=Math.min(maxScale,currentScale+zoomStep); else currentScale=Math.max(minScale,currentScale-zoomStep); redrawCanvasWithCurrentState(); updateSelectionBox(); });
+    function zoomIn(){ if(!currentImageBuffer){ showMessageBox('No Image','Load an image first.'); return; } currentScale=Math.min(maxScale,currentScale+zoomStep); redrawCanvasWithCurrentState(); updateSelectionBox(); }
+    function zoomOut(){ if(!currentImageBuffer){ showMessageBox('No Image','Load an image first.'); return; } currentScale=Math.max(minScale,currentScale-zoomStep); redrawCanvasWithCurrentState(); updateSelectionBox(); }
+
+    function initializeMapWithGeoData(geoData){ if(map) map.remove(); const sw=L.latLng(geoData.minY, geoData.minX); const ne=L.latLng(geoData.maxY, geoData.maxX); const bounds=L.latLngBounds(sw, ne); map=L.map('map').fitBounds(bounds); L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+}).addTo(map); L.rectangle(bounds,{color:'#ff7800',weight:1,fillOpacity:0.1}).addTo(map); mapContainer.style.display='block'; setTimeout(()=>map.invalidateSize(),0); }
+    function toggleInteractiveMap(){ if(mapContainer.style.display==='none'||mapContainer.style.display===''){ mapContainer.style.display='block'; if(!map){ map=L.map('map').setView([0,0],2); L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+}).addTo(map); } setTimeout(()=>map.invalidateSize(),0); } else { mapContainer.style.display='none'; } }
+
+    saveButton.addEventListener('click', ()=>{ if(!currentImageBuffer){ showMessageBox('No Image','No image to download.'); return; } const c=document.createElement('canvas'); const cctx=c.getContext('2d'); c.width=currentImageBuffer.width; c.height=currentImageBuffer.height; cctx.putImageData(currentImageBuffer,0,0); const url=c.toDataURL('image/png'); const a=document.createElement('a'); a.href=url; a.download='simba_edited_image.png'; document.body.appendChild(a); a.click(); document.body.removeChild(a); });
+
+    applyColorMapButtonLocal.addEventListener('click', applyColorMapLocal);
+    resetCanvasButton.addEventListener('click', resetCanvas);
+    applyAdjustmentsButton.addEventListener('click', applyCurrentAdjustments);
+    invertColorsButton.addEventListener('click', invertColors);
+    rotateButton.addEventListener('click', rotateImage);
+    flipHorizontalButton.addEventListener('click', flipHorizontal);
+    zoomInButton.addEventListener('click', zoomIn);
+    zoomOutButton.addEventListener('click', zoomOut);
+    toggleMapButton.addEventListener('click', toggleInteractiveMap);
+    panMapButton.addEventListener('click', () => {
+      if (map) {
+        map.dragging.enable();
+        map.getContainer().style.cursor = 'grab';
+        showMessageBox('Pan Mode', 'يمكنك الآن سحب الخريطة يمين ويسار بالفأرة.');
+      } else {
+        showMessageBox('No Map', 'الخريطة غير مفعلة حالياً.');
+      }
+    });
+    imageUploadInput.addEventListener('change', (e)=>{ if(e.target.files.length>0) loadImageFromFile(e.target.files[0]); });
+    uploadNewImageButton.addEventListener('click', ()=> imageUploadInput.click());
+
+    // ===== Server side (from edit.html) =====
+    const API_URL='http://192.168.1.17:5000';
+    const fileInputBackend=document.getElementById('fileInputBackend');
+    const uploadTiffButton=document.getElementById('uploadTiffButton');
+    const processedImagePreview=document.getElementById('processedImagePreview');
+    const serverSelectionBox=document.getElementById('serverSelectionBox');
+    const serverPreviewWrapper=document.getElementById('serverPreviewWrapper');
+    const processedPlaceholder=document.getElementById('processedPlaceholder');
+    const loadingProcessed=document.getElementById('loadingProcessed');
+    const processedMessageBox=document.getElementById('processedMessageBox');
+    const downloadButton=document.getElementById('downloadButton');
+    const clipMinX=document.getElementById('clipMinX');
+    const clipMinY=document.getElementById('clipMinY');
+    const clipMaxX=document.getElementById('clipMaxX');
+    const clipMaxY=document.getElementById('clipMaxY');
+    const clipButton=document.getElementById('clipButton');
+    const numClasses=document.getElementById('numClasses');
+    const classificationMethodSelect=document.getElementById('classificationMethod');
+    const classifyButton=document.getElementById('classifyButton');
+    const colorMapSelectServer=document.getElementById('colorMapSelectServer');
+    const applyColorMapButtonServer=document.getElementById('applyColorMapButtonServer');
+    const classificationLegend=document.getElementById('classificationLegend');
+
+    let currentImageId=null; let currentProcessedImageData=null;
+
+    function showInlineMessage(msg, isError=false){ processedMessageBox.textContent=msg; processedMessageBox.style.display='block'; processedMessageBox.classList.toggle('error', !!isError); setTimeout(()=>{ processedMessageBox.style.display='none'; processedMessageBox.classList.remove('error'); }, 5000); }
+
+    uploadTiffButton.addEventListener('click', () => {
+      fileInputBackend.value = '';
+      fileInputBackend.click();
+    });
+
+    fileInputBackend.addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      loadingProcessed.style.display = 'block';
+      processedImagePreview.style.display = 'none';
+      processedPlaceholder.style.display = 'block';
+      processedMessageBox.style.display = 'none';
+      if (serverSelectionBox) serverSelectionBox.style.display='none';
+      downloadButton.disabled = true;
+      classificationLegend.style.display = 'none';
+      try {
+        const form = new FormData();
+        form.append('file', file);
+        const resp = await fetch(`${API_URL}/upload`, { method: 'POST', body: form });
+        const result = await resp.json();
+        if (resp.ok) {
+          currentImageId = result.image_id;
+          processedImagePreview.src = `data:image/png;base64,${result.preview_image_base64}`;
+          processedImagePreview.style.display = 'block';
+          processedPlaceholder.style.display = 'none';
+          currentProcessedImageData = null;
+          downloadButton.disabled = true;
+          showInlineMessage('Image uploaded successfully to server.');
+        } else {
+          showInlineMessage(`Upload error: ${result.message || 'Unknown error'}`, true);
+        }
+      } catch (err) {
+        console.error(err);
+        showInlineMessage('Network error during upload.', true);
+      } finally {
+        loadingProcessed.style.display = 'none';
+      }
+    });
+
+    function getColorForClass(idx, n){ const hue = 240 - (idx / Math.max(1,(n-1))) * 240; return `hsl(${hue}, 80%, 50%)`; }
+    function renderLegend(details){ classificationLegend.innerHTML=''; if(details && details.legend_items && details.legend_items.length>0){ classificationLegend.style.display='block'; const meta=document.createElement('div'); meta.style.marginBottom='8px'; meta.innerHTML=`<strong>Method:</strong> ${details.method?.toUpperCase()||''} &nbsp; <strong>Classes:</strong> ${details.n_classes||''} &nbsp; <strong>Index:</strong> ${(details.index_type||'Unknown').toUpperCase()}`; classificationLegend.appendChild(meta); const n=details.n_classes; details.legend_items.forEach(it=>{ const row=document.createElement('div'); row.className='legend-item'; const sw=document.createElement('span'); sw.className='swatch'; sw.style.backgroundColor=getColorForClass(it.class_index, n); const label=document.createElement('span'); label.textContent=it.description; row.appendChild(sw); row.appendChild(label); classificationLegend.appendChild(row); }); } else { classificationLegend.style.display='none'; } }
+
+    async function applyTool(toolName, params={}){
+      if(!currentImageId){ showInlineMessage('Please upload an image to server first.', true); return; }
+      loadingProcessed.style.display='block'; processedImagePreview.style.display='none'; processedPlaceholder.style.display='block'; processedMessageBox.style.display='none'; downloadButton.disabled=true; classificationLegend.style.display='none';
+      try{
+        const resp=await fetch(`${API_URL}/process/${currentImageId}/${toolName}`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(params) });
+        const result=await resp.json();
+        if(resp.ok){ processedImagePreview.src=`data:image/png;base64,${result.preview_image_base64}`; processedImagePreview.style.display='block'; processedPlaceholder.style.display='none'; currentProcessedImageData=result.processed_image_base64||null; downloadButton.disabled=!currentProcessedImageData; if(toolName==='classify'){ const m=result.classification_details?.method||'classification'; const nc=result.classification_details?.n_classes||''; const idx=result.classification_details?.index_type||''; showInlineMessage(`${m.toUpperCase()} applied. Classes: ${nc} ${idx?`for ${idx.toUpperCase()}`:''}.`); renderLegend(result.classification_details); } else { showInlineMessage(`${toolName} applied successfully.`); } } else { showInlineMessage(`Error applying ${toolName}: ${result.message||'Unknown error'}`, true); }
+      } catch(err){ console.error(err); showInlineMessage(`Network error applying ${toolName}.`, true); }
+      finally{ loadingProcessed.style.display='none'; }
+    }
+
+    // ===== Server-side interactive cropping over preview =====
+    let isServerCropping=false; let cropStartServer={x:0,y:0}; let cropRectServer={x:0,y:0,width:0,height:0};
+    function getPreviewLocalPos(evt){ const imgRect=processedImagePreview.getBoundingClientRect(); return { x: Math.max(0, Math.min(evt.clientX - imgRect.left, imgRect.width)), y: Math.max(0, Math.min(evt.clientY - imgRect.top, imgRect.height)) }; }
+    processedImagePreview.addEventListener('mousedown', (e)=>{ if(processedImagePreview.style.display==='none') return; isServerCropping=true; const p=getPreviewLocalPos(e); cropStartServer={x:p.x,y:p.y}; cropRectServer={x:p.x,y:p.y,width:0,height:0}; const imgRect=processedImagePreview.getBoundingClientRect(); const wrapRect=serverPreviewWrapper.getBoundingClientRect(); const offsetLeft=imgRect.left - wrapRect.left; const offsetTop=imgRect.top - wrapRect.top; serverSelectionBox.style.left=`${offsetLeft + cropStartServer.x}px`; serverSelectionBox.style.top=`${offsetTop + cropStartServer.y}px`; serverSelectionBox.style.width='0px'; serverSelectionBox.style.height='0px'; serverSelectionBox.style.display='block'; });
+    window.addEventListener('mousemove', (e)=>{ if(!isServerCropping) return; const imgRect=processedImagePreview.getBoundingClientRect(); const wrapRect=serverPreviewWrapper.getBoundingClientRect(); const offsetLeft=imgRect.left - wrapRect.left; const offsetTop=imgRect.top - wrapRect.top; const p=getPreviewLocalPos(e); cropRectServer.width=p.x - cropStartServer.x; cropRectServer.height=p.y - cropStartServer.y; const leftImg=Math.min(cropStartServer.x, p.x); const topImg=Math.min(cropStartServer.y, p.y); const widthImg=Math.min(Math.abs(cropRectServer.width), imgRect.width - leftImg); const heightImg=Math.min(Math.abs(cropRectServer.height), imgRect.height - topImg); serverSelectionBox.style.left=`${offsetLeft + leftImg}px`; serverSelectionBox.style.top=`${offsetTop + topImg}px`; serverSelectionBox.style.width=`${widthImg}px`; serverSelectionBox.style.height=`${heightImg}px`; });
+    window.addEventListener('mouseup', ()=>{ if(!isServerCropping) return; isServerCropping=false; });
+
+    document.getElementById('clipButton').addEventListener('click', ()=>{
+      // If a selection exists on the server preview, prefer it
+      const imgRect=processedImagePreview.getBoundingClientRect(); const wrapRect=serverPreviewWrapper.getBoundingClientRect();
+      const selW=parseFloat(serverSelectionBox.style.width||'0');
+      const selH=parseFloat(serverSelectionBox.style.height||'0');
+      if(selW>5 && selH>5 && processedImagePreview.style.display!=='none'){
+        if(!currentImageId){ showInlineMessage('Please upload an image to server first.', true); return; }
+        const naturalW=processedImagePreview.naturalWidth||0; const naturalH=processedImagePreview.naturalHeight||0;
+        const scaleX=naturalW/Math.max(1, imgRect.width); const scaleY=naturalH/Math.max(1, imgRect.height);
+        const leftInWrapper=parseFloat(serverSelectionBox.style.left||'0');
+        const topInWrapper=parseFloat(serverSelectionBox.style.top||'0');
+        const imgOriginLeftInWrapper=imgRect.left - wrapRect.left;
+        const imgOriginTopInWrapper=imgRect.top - wrapRect.top;
+        const leftInImg=Math.max(0, leftInWrapper - imgOriginLeftInWrapper);
+        const topInImg=Math.max(0, topInWrapper - imgOriginTopInWrapper);
+        const min_x=Math.round(leftInImg*scaleX);
+        const min_y=Math.round(topInImg*scaleY);
+        const max_x=Math.round((leftInImg+selW)*scaleX);
+        const max_y=Math.round((topInImg+selH)*scaleY);
+        serverSelectionBox.style.display='none';
+        applyTool('clip', {min_x, min_y, max_x, max_y});
+        return;
+      }
+      // fallback to numeric inputs if no selection
+      const min_x=parseInt(clipMinX.value), min_y=parseInt(clipMinY.value), max_x=parseInt(clipMaxX.value), max_y=parseInt(clipMaxY.value);
+      if([min_x,min_y,max_x,max_y].some(Number.isNaN)){ showInlineMessage('Enter valid clip parameters.', true); return; }
+      if(min_x>=max_x || min_y>=max_y){ showInlineMessage('Min must be less than Max.', true); return; }
+      applyTool('clip', {min_x,min_y,max_x,max_y});
+    });
+    classifyButton.addEventListener('click', ()=>{ const n=parseInt(numClasses.value); if(Number.isNaN(n)||n<2||n>20){ showInlineMessage('Classes must be between 2 and 20.', true); return; } const method=classificationMethodSelect.value; applyTool('classify', { n_clusters: n, method }); });
+    applyColorMapButtonServer.addEventListener('click', ()=>{ const color_map=colorMapSelectServer.value; applyTool('colormap', { color_map }); });
+    downloadButton.addEventListener('click', async ()=>{
+      // بدلاً من تحميل من base64، حمل من الباك اند مباشرة كـ ZIP
+      try {
+        downloadButton.disabled = true;
+        downloadButton.textContent = 'Downloading...';
+        const response = await fetch('http://127.0.0.1:5000/classification/latest_zip');
+        if (!response.ok) throw new Error('Failed to download ZIP file');
+        const arrayBuffer = await response.arrayBuffer();
+        const url = window.URL.createObjectURL(new Blob([arrayBuffer], { type: 'application/zip' }));
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'latest_classification_result.zip';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        showInlineMessage('ZIP download started!');
+      } catch (err) {
+        showInlineMessage('Error downloading ZIP: ' + err.message, true);
+      } finally {
+        downloadButton.disabled = false;
+        downloadButton.textContent = 'Download Processed TIFF';
+      }
+    });
+
+    // ===== Init =====
+    window.addEventListener('load', ()=>{ createStars(); window.addEventListener('resize', ()=>{ resizeCanvasToFitContainer(); redrawCanvasWithCurrentState(); if(map){ setTimeout(()=>map.invalidateSize(),0); } }); });
+    const canvasPanMapButton = document.getElementById('canvasPanMapButton');
+    canvasPanMapButton.addEventListener('click', () => {
+      isCanvasPanning = !isCanvasPanning;
+      canvas.style.cursor = isCanvasPanning ? 'grab' : 'crosshair';
+      canvasPanMapButton.textContent = isCanvasPanning ? 'إلغاء Pan' : 'Pan الصورة';
+      if (isCanvasPanning) {
+        removeSelectionBox();
+      } else {
+        panOffset = {x: 0, y: 0};
+        redrawCanvasWithCurrentState();
+      }
+    });
+  </script>
+</body>
+</html>
+
+

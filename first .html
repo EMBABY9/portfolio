@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIMBA - Satellite Image Analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    /* Base Styles */
+    :root {
+      --space-dark: #0a0a1a;
+      --space-blue: #1a1a2e;
+      --space-indigo: #16213e;
+      --space-purple: #331b3f;
+      --accent-cyan: #00eeff;
+      --accent-purple: #7b2cbf;
+      --accent-pink: #ff2a6d;
+      --text-primary: #ffffff;
+      --text-secondary: rgba(255, 255, 255, 0.7);
+      --orbit-time: 20s;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body, html {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--space-dark);
+      color: var(--text-primary);
+      height: 100%;
+      width: 100%;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Space Background */
+    .space-background {
+      position: fixed;
+      width: 100vw;
+      height: 100vh;
+      top: 0;
+      left: 0;
+      z-index: -1;
+      background: linear-gradient(45deg, var(--space-dark), var(--space-blue), var(--space-indigo), var(--space-purple));
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      overflow: hidden;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Stars */
+    #stars, #stars2, #stars3 {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .star {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      z-index: 1;
+    }
+
+    /* Planets */
+    .planet {
+      position: absolute;
+      border-radius: 50%;
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
+      pointer-events: none;
+    }
+
+    #sun {
+      width: 200px;
+      height: 200px;
+      top: 10%;
+      left: 10%;
+      background: radial-gradient(circle at 30% 40%, #ffd700, #ff4500);
+      box-shadow: 0 0 50px #ff4500;
+      z-index: 1;
+      animation: float 20s ease-in-out infinite;
+    }
+
+    #mercury {
+      width: 20px;
+      height: 20px;
+      top: 20%;
+      left: 20%;
+      background: radial-gradient(circle at 30% 40%, #a0522d, #8b4513);
+      animation: orbit 8s linear infinite, float 15s ease-in-out infinite;
+    }
+
+    #venus {
+      width: 35px;
+      height: 35px;
+      top: 30%;
+      left: 30%;
+      background: radial-gradient(circle at 30% 40%, #deb887, #d2691e);
+      animation: orbit 12s linear infinite, float 18s ease-in-out infinite;
+    }
+
+    #earth {
+      width: 40px;
+      height: 40px;
+      top: 40%;
+      left: 40%;
+      background: radial-gradient(circle at 30% 40%, #4169e1, #000080);
+      animation: orbit 15s linear infinite, float 20s ease-in-out infinite;
+    }
+
+    #mars {
+      width: 30px;
+      height: 30px;
+      top: 50%;
+      left: 50%;
+      background: radial-gradient(circle at 30% 40%, #cd5c5c, #8b0000);
+      animation: orbit 20s linear infinite, float 22s ease-in-out infinite;
+    }
+
+    #jupiter {
+      width: 100px;
+      height: 100px;
+      top: 60%;
+      right: 10%;
+      background: radial-gradient(circle at 30% 40%, #deb887, #8b4513);
+      animation: orbit 30s linear infinite, float 25s ease-in-out infinite;
+    }
+
+    #saturn {
+      width: 80px;
+      height: 80px;
+      bottom: 20%;
+      right: 20%;
+      background: radial-gradient(circle at 30% 40%, #f4a460, #8b4513);
+      animation: orbit 35s linear infinite, float 28s ease-in-out infinite;
+    }
+
+    #uranus {
+      width: 60px;
+      height: 60px;
+      bottom: 30%;
+      right: 30%;
+      background: radial-gradient(circle at 30% 40%, #87ceeb, #4169e1);
+      animation: orbit 40s linear infinite, float 30s ease-in-out infinite;
+    }
+
+    #neptune {
+      width: 55px;
+      height: 55px;
+      bottom: 40%;
+      right: 40%;
+      background: radial-gradient(circle at 30% 40%, #1e90ff, #000080);
+      animation: orbit 45s linear infinite, float 32s ease-in-out infinite;
+    }
+
+    @keyframes orbit {
+      from {
+        transform: rotate(0deg) translateX(50px) rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg) translateX(50px) rotate(-360deg);
+      }
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-20px);
+      }
+    }
+
+    /* Content Layout */
+    .content-wrapper {
+      position: relative;
+      min-height: 100vh;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 2rem;
+      z-index: 10;
+    }
+
+    header {
+      display: flex;
+      justify-content: center;
+      padding: 1.5rem 0;
+      position: relative; /* Needed for absolute positioning of language toggle */
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+
+    .logo-text {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 3.5rem;
+      font-weight: 800;
+      letter-spacing: 8px;
+      color: var(--text-primary);
+      text-shadow: 0 0 10px var(--accent-cyan), 0 0 20px rgba(0, 238, 255, 0.5);
+      animation: glow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from {
+        text-shadow: 0 0 5px var(--accent-cyan), 0 0 10px var(--accent-cyan);
+      }
+      to {
+        text-shadow: 0 0 10px var(--accent-cyan), 0 0 20px var(--accent-cyan), 0 0 30px var(--accent-cyan);
+      }
+    }
+
+    .logo-orbit {
+      position: relative;
+      width: 50px;
+      height: 50px;
+      margin-right: 16px;
+      border-radius: 50%;
+      border: 2px solid rgba(0, 238, 255, 0.3);
+      animation: spin var(--orbit-time) linear infinite;
+    }
+
+    .logo-satellite {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: var(--accent-cyan);
+      border-radius: 50%;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 0 10px var(--accent-cyan), 0 0 20px rgba(0, 238, 255, 0.5);
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Language Toggle Button (Icon) */
+    .language-toggle {
+        position: absolute;
+        top: 2rem;
+        right: 2rem;
+        background-color: transparent;
+        color: var(--text-primary);
+        border: 1px solid var(--accent-cyan);
+        width: 40px; /* Small square button */
+        height: 40px; /* Small square button */
+        border-radius: 50%; /* Make it round */
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        z-index: 11; /* Ensure it's above other elements */
+        padding: 0; /* Remove padding */
+    }
+
+    .language-toggle svg {
+        width: 24px; /* Icon size */
+        height: 24px; /* Icon size */
+        fill: currentColor; /* Use button's text color */
+        transition: transform 0.3s ease;
+    }
+
+    .language-toggle:hover {
+        background-color: rgba(0, 238, 255, 0.1);
+        box-shadow: 0 0 10px rgba(0, 238, 255, 0.5);
+        transform: scale(1.05); /* Slight scale on hover */
+    }
+    .language-toggle:hover svg {
+        transform: rotate(360deg); /* Rotate icon on hover */
+    }
+
+    .language-toggle:active {
+        transform: translateY(1px);
+        animation: buttonPress 0.2s ease forwards; /* Animation on click */
+    }
+
+    @keyframes buttonPress {
+        0% { transform: scale(1); }
+        50% { transform: scale(0.95); }
+        100% { transform: scale(1); }
+    }
+
+    /* Main Content */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .hero-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .tagline {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(to right, var(--text-primary), var(--accent-cyan));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .description {
+      font-size: 1.2rem;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      margin-bottom: 3rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      animation: fadeInUp 1s ease-out 0.3s both;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* CTA Button */
+    .cta-container {
+      margin: 2rem 0;
+      animation: fadeInUp 1s ease-out 0.6s both;
+    }
+
+    .start-button {
+      position: relative;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      padding: 1rem 4rem;
+      background-color: transparent;
+      color: var(--text-primary);
+      border: 2px solid var(--accent-cyan);
+      border-radius: 4px;
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      z-index: 1;
+    }
+
+    .button-text {
+      position: relative;
+      z-index: 2;
+    }
+
+    .button-glow {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, var(--accent-cyan), var(--accent-purple));
+      opacity: 0;
+      z-index: 1;
+      transition: opacity 0.3s ease;
+    }
+
+    .start-button:hover {
+      text-shadow: 0 0 10px var(--text-primary);
+      box-shadow: 0 0 20px rgba(0, 238, 255, 0.5);
+      transform: scale(1.05);
+    }
+
+    .start-button:hover .button-glow {
+      opacity: 0.8;
+    }
+
+    .start-button:active {
+      transform: scale(0.95);
+    }
+
+    /* Features Section */
+    .features {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 2rem;
+      margin-top: 4rem;
+      animation: fadeInUp 1s ease-out 0.9s both;
+    }
+
+    .feature {
+      background: rgba(26, 26, 46, 0.5);
+      border: 1px solid rgba(0, 238, 255, 0.2);
+      border-radius: 8px;
+      padding: 1.5rem;
+      width: 220px;
+      backdrop-filter: blur(10px);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .feature:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      border-color: var(--accent-cyan);
+    }
+
+    .feature-icon {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 1rem;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: contain;
+      filter: drop-shadow(0 0 5px var(--accent-cyan));
+    }
+
+    .feature h3 {
+      font-family: 'Orbitron', sans-serif;
+      margin-bottom: 0.5rem;
+      font-size: 1.2rem;
+      color: var(--accent-cyan);
+    }
+
+    .feature p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    /* Program Description Sections */
+    .program-description-section {
+      text-align: center;
+      margin-top: 6rem; /* Increased margin to separate from features */
+      padding: 2rem;
+      background: rgba(26, 26, 46, 0.5); /* Same background as features for consistency */
+      border: 1px solid rgba(0, 238, 255, 0.2); /* Same border as features */
+      border-radius: 8px; /* Same border-radius as features */
+      backdrop-filter: blur(10px); /* Same blur effect */
+      max-width: 900px; /* Adjust width as needed */
+      margin-left: auto;
+      margin-right: auto;
+      animation: fadeInUp 1s ease-out 1.2s both; /* Added animation for this section */
+    }
+
+    .program-description-section h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      margin-bottom: 1.5rem;
+      text-shadow: 0 0 8px rgba(0, 238, 255, 0.4);
+    }
+
+    .program-description-section p {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+      padding: 0 1rem; /* Add some padding to the text */
+    }
+
+    .program-description-section ul {
+        list-style: none; /* Remove default bullet points */
+        padding: 0;
+        margin-top: 1.5rem;
+    }
+
+    .program-description-section ul li {
+        margin-bottom: 1rem;
+        font-size: 1rem;
+        line-height: 1.6;
+        color: var(--text-primary);
+        background: rgba(0, 238, 255, 0.1); /* Light accent background */
+        padding: 0.8rem 1.2rem;
+        border-radius: 6px;
+        transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+
+    .program-description-section ul li:hover {
+        transform: translateY(-3px); /* Slight shift on hover */
+        background-color: rgba(0, 238, 255, 0.15); /* Slightly darker accent on hover */
+    }
+
+    .program-description-section ul li strong {
+        color: var(--accent-cyan); /* Highlight strong text */
+        font-family: 'Orbitron', sans-serif;
+        font-weight: 600;
+    }
+
+    /* Arabic Description Specific Styles */
+    .program-description-section.lang-ar p,
+    .program-description-section.lang-ar ul li,
+    .lang-ar .tagline,
+    .lang-ar .description,
+    .lang-ar .feature h3,
+    .lang-ar .feature p {
+        text-align: right; /* Align text to the right for Arabic */
+        direction: rtl; /* Set text direction to right-to-left */
+    }
+    .program-description-section.lang-ar ul li {
+        border-left: 3px solid var(--accent-cyan); /* Cyan border on the left */
+        border-right: none;
+    }
+
+    /* English Description Specific Styles */
+    .program-description-section.lang-en p,
+    .program-description-section.lang-en ul li,
+    .lang-en .tagline,
+    .lang-en .description,
+    .lang-en .feature h3,
+    .lang-en .feature p {
+        text-align: left; /* Align text to the left for English */
+        direction: ltr; /* Set text direction to left-to-right */
+    }
+    .program-description-section.lang-en ul li {
+        border-left: none; /* Remove left border */
+        border-right: 3px solid var(--accent-cyan); /* Add right border for English */
+    }
+
+    /* Hide/Show logic for language sections */
+    .lang-section {
+        display: none; /* Hidden by default, JavaScript will manage visibility */
+    }
+
+    .lang-section.active {
+        display: block; /* Show active language section */
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .logo-text {
+        font-size: 2.5rem;
+      }
+      
+      .tagline {
+        font-size: 1.8rem;
+      }
+      
+      .description {
+        font-size: 1rem;
+      }
+      
+      .features {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .feature {
+        width: 100%;
+        max-width: 280px;
+      }
+      
+      .start-button {
+        font-size: 1.2rem;
+        padding: 0.8rem 3rem;
+      }
+
+      .language-toggle {
+        top: 1rem;
+        right: 1rem;
+        width: 35px; /* Smaller for mobile */
+        height: 35px; /* Smaller for mobile */
+      }
+      .language-toggle svg {
+        width: 20px; /* Smaller icon for mobile */
+        height: 20px; /* Smaller icon for mobile */
+      }
+
+      .program-description-section h2 {
+          font-size: 1.5rem;
+      }
+
+      .program-description-section p,
+      .program-description-section ul li {
+          font-size: 0.95rem;
+          padding: 0 0.5rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .content-wrapper {
+        padding: 1rem;
+      }
+      
+      .logo-text {
+        font-size: 2rem;
+      }
+      
+      .tagline {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="space-background">
+    <div id="stars"></div>
+    <div id="stars2"></div>
+    <div id="stars3"></div>
+    <div id="sun" class="planet"></div>
+    <div id="mercury" class="planet"></div>
+    <div id="venus" class="planet"></div>
+    <div id="earth" class="planet"></div>
+    <div id="mars" class="planet"></div>
+    <div id="jupiter" class="planet"></div>
+    <div id="saturn" class="planet"></div>
+    <div id="uranus" class="planet"></div>
+    <div id="neptune" class="planet"></div>
+  </div>
+  
+  <div class="content-wrapper">
+    <header>
+      <div class="logo-container">
+        <div class="logo-orbit">
+          <div class="logo-satellite"></div>
+        </div>
+        <h1 class="logo-text">SIMBA</h1>
+      </div>
+      <button class="language-toggle" id="languageToggle">
+        <!-- Globe Icon SVG -->
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.22.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm3-1.93V16c0-1.1.9-2 2-2h3.22c-.52 2.76-2.24 5.04-4.22 5.93zM12 4c1.15 0 2.21.29 3.16.78L14 7c-1.1 0-2 .9-2 2v1H9V9c0-2.21 1.79-4 4-4zm5 .78C18.21 5.29 19 6.55 19 8H17c0-1.1-.9-2-2-2h-1l-.47-2.12c1.08-.24 2.23-.38 3.47-.38zM6.84 5.22C7.79 4.73 8.85 4 10 4V7c-1.1 0-2-.9-2-2H5.78c.52 2.76 2.24 5.04 4.22 5.93L12 14v1c0 1.1.9 2 2 2h2v-1.93c-3.95-.49-7-3.85-7-7.93zm-4.79 5.86c-0.13.57-0.21 1.17-0.21 1.79 0 4.08 3.05 7.44 7 7.93V18c1.1 0 2-.9 2-2v-1h3v-2c0-1.1-.9-2-2-2V9c0-1.1-.9-2-2-2V4.07c-3.95.49-7 3.85-7 7.93z"/>
+        </svg>
+      </button>
+    </header>
+    
+    <main>
+        <!-- English Content Section -->
+        <div id="english-content" class="lang-section lang-en active">
+            <div class="hero-content">
+                <h2 class="tagline">Advanced Satellite Image Analysis</h2>
+                <p class="description">Explore, analyze, and extract insights from satellite imagery with cutting-edge AI technology</p>
+                <div class="cta-container">
+                    <button id="start-button-en" class="start-button">
+                        <span class="button-text">START</span>
+                        <span class="button-glow"></span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon" id="analysis-icon"></div>
+                    <h3>Deep Analysis</h3>
+                    <p>Process multi-spectral imagery with precision</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon" id="realtime-icon"></div>
+                    <h3>Real-time Processing</h3>
+                    <p>Get results instantly with our advanced algorithms</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon" id="ai-icon"></div>
+                    <h3>AI Powered</h3>
+                    <p>Harness the power of machine learning for accurate results</p>
+                </div>
+            </div>
+
+            <div id="english-description-section" class="program-description-section lang-en">
+                <h2>About SIMBA Program</h2>
+                <p>
+                  SIMBA (Satellite Image Bot for Analysis) is an integrated tool for satellite image analysis, designed to help users explore and extract valuable insights from geospatial data using AI and remote sensing technologies. The program combines a user-friendly interface with advanced analytical capabilities to provide a unique experience in satellite image processing.
+                </p>
+                <h2>Key Program Features:</h2>
+                <ul>
+                    <li>
+                        <strong>Natural Language Processing (NLP):</strong> SIMBA understands user commands in natural language and utilizes a large language model (LLM) to determine the requested analysis type and effectively manage conversation context.
+                    </li>
+                    <li>
+                        <strong>Multi-band Upload:</strong> Users can upload multiple spectral band images (e.g., Red, Green, Near-Infrared bands) from satellites. The program automatically identifies the type of each band.
+                    </li>
+                    <li>
+                        <strong>Wide Range of Analytical Indices:</strong> SIMBA supports dozens of common indices in GIS and remote sensing, categorized as follows:
+                        <ul>
+                            <li><strong>Vegetation Indices:</strong> Such as NDVI, EVI, SAVI, and others for assessing vegetation health, crop monitoring, and studying environmental changes.</li>
+                            <li><strong>Water Body Indices:</strong> Such as NDWI, MNDWI, AWEI, and others for identifying water bodies, flood monitoring, and water resource management.</li>
+                            <li><strong>Other Indices:</strong> Including NDBI for built-up areas and NDMI for moisture content and drought assessment, in addition to the ability to create composite images from multiple bands.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <strong>Generation of Visual Analytical Images:</strong> The program processes the input bands to create clear analytical images, with options to display them in color or grayscale to enhance interpretation.
+                    </li>
+                    <li>
+                        <strong>Result Display and Download:</strong> Analytical results are displayed directly in the frontend interface, with the option to easily download the generated images.
+                    </li>
+                    <li>
+                        <strong>Smart Session Management:</strong> The program maintains the session context for each user, allowing for continuous and organized interactions, with automatic cleanup of temporary data to ensure efficiency.
+                    </li>
+                    <li>
+                        <strong>Attractive and Intuitive User Interface Design:</strong> Features a modern and interactive interface with animations and visual effects to enhance user experience.
+                    </li>
+                </ul>
+                <p>
+                  Thanks to these features, SIMBA is a powerful and versatile tool that supports researchers, planners, and analysts in various fields that rely on accurate and efficient satellite image analysis.
+                </p>
+            </div>
+        </div>
+
+        <!-- Arabic Content Section -->
+        <div id="arabic-content" class="lang-section lang-ar hidden">
+            <div class="hero-content">
+                <h2 class="tagline">تحليل متقدم لصور الأقمار الصناعية</h2>
+                <p class="description">استكشف وحلل واستخرج الرؤى من صور الأقمار الصناعية بتقنية الذكاء الاصطناعي المتطورة</p>
+                <div class="cta-container">
+                    <button id="start-button-ar" class="start-button">
+                        <span class="button-text">ابدأ</span>
+                        <span class="button-glow"></span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon" id="analysis-icon"></div>
+                    <h3>تحليل عميق</h3>
+                    <p>معالجة صور متعددة الأطياف بدقة</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon" id="realtime-icon"></div>
+                    <h3>معالجة فورية</h3>
+                    <p>احصل على النتائج على الفور بفضل خوارزمياتنا المتقدمة</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon" id="ai-icon"></div>
+                    <h3>مدعوم بالذكاء الاصطناعي</h3>
+                    <p>استفد من قوة التعلم الآلي للحصول على نتائج دقيقة</p>
+                </div>
+            </div>
+
+            <div id="arabic-description-section" class="program-description-section lang-ar">
+                <h2>نبذة عن برنامج SIMBA</h2>
+                <p>
+                  برنامج SIMBA (Satellite Image Bot for Analysis) هو أداة متكاملة لتحليل صور الأقمار الصناعية، مصممة لمساعدة المستخدمين على استكشاف واستخلاص رؤى قيمة من البيانات الجغرافية المكانية باستخدام تقنيات الذكاء الاصطناعي والاستشعار عن بعد. يجمع البرنامج بين واجهة سهلة الاستخدام وقدرات تحليلية متقدمة لتقديم تجربة فريدة في معالجة الصور الفضائية.
+                </p>
+                <h2>خصائص البرنامج الرئيسية:</h2>
+                <ul>
+                    <li>
+                        <strong>معالجة اللغة الطبيعية (NLP):</strong> يفهم SIMBA أوامر المستخدمين باللغة الطبيعية ويستخدم نموذج لغة كبير (LLM) لتحديد نوع التحليل المطلوب وإدارة سياق المحادثة بفعالية.
+                    </li>
+                    <li>
+                        <strong>تحميل متعدد للنطاقات (Multi-band Upload):</strong> يمكن للمستخدمين تحميل صور متعددة الأطياف للأقمار الصناعية (مثل النطاقات الحمراء، الخضراء، تحت الحمراء القريبة، إلخ)، ويقوم البرنامج بالتعرف تلقائيًا على نوع كل نطاق.
+                    </li>
+                    <li>
+                        <strong>مجموعة واسعة من المؤشرات التحليلية:</strong> يدعم SIMBA عشرات المؤشرات الشائعة في نظم المعلومات الجغرافية والاستشعار عن بعد، مقسمة إلى فئات:
+                        <ul>
+                            <li><strong>مؤشرات الغطاء النباتي:</strong> مثل NDVI، EVI، SAVI، وغيرها لتقييم صحة الغطاء النباتي، مراقبة المحاصيل، ودراسة التغيرات البيئية.</li>
+                            <li><strong>مؤشرات المسطحات المائية:</strong> مثل NDWI، MNDWI، AWEI، وغيرها لتحديد المسطحات المائية، رصد الفيضانات، وإدارة الموارد المائية.</li>
+                            <li><strong>مؤشرات أخرى:</strong> مثل NDBI للمناطق المبنية و NDMI لمحتوى الرطوبة والجفاف، بالإضافة إلى إمكانية إنشاء صور مركبة (Composite) من نطاقات متعددة.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <strong>توليد صور تحليلية مرئية:</strong> يقوم البرنامج بمعالجة النطاقات المدخلة لإنشاء صور تحليلية واضحة، مع خيارات لعرضها بالألوان أو بالدرجات الرمادية لتحسين التفسير.
+                    </li>
+                    <li>
+                        <strong>عرض وتنزيل النتائج:</strong> يتم عرض النتائج التحليلية مباشرة في الواجهة الأمامية، مع إمكانية تنزيل الصور الناتجة بسهولة.
+                    </li>
+                    <li>
+                        <strong>إدارة الجلسات الذكية:</strong> يحافظ البرنامج على سياق الجلسة لكل مستخدم، مما يسمح بتفاعلات مستمرة ومنظمة، مع تنظيف تلقائي للبيانات المؤقتة لضمان الكفاءة.
+                    </li>
+                    <li>
+                        <strong>تصميم واجهة مستخدم جذاب وبديهي:</strong> يتميز بواجهة عصرية وتفاعلية مع رسوم متحركة وتأثيرات بصرية لتعزيز تجربة المستخدم.
+                    </li>
+                </ul>
+                <p>
+                  بفضل هذه الخصائص، يعتبر SIMBA أداة قوية ومتعددة الاستخدامات تدعم الباحثين، المخططين، والمحللين في مختلف المجالات التي تعتمد على بيانات الاستشعار عن بعد.
+                </p>
+            </div>
+        </div>
+    </main>
+  </div>
+
+  <script>
+    // Stars animation
+    document.addEventListener('DOMContentLoaded', () => {
+      createStars();
+      animateStars();
+      initializeApp();
+      setupEventListeners();
+      initializeLanguageToggle(); // Initialize language toggle on load
+    });
+
+    function createStars() {
+      const starLayers = [
+        { id: 'stars', count: 200, size: [1, 2], opacity: [0.4, 0.7], speed: 50 },
+        { id: 'stars2', count: 100, size: [2, 3], opacity: [0.7, 0.9], speed: 100 },
+        { id: 'stars3', count: 50, size: [3, 4], opacity: [0.8, 1], speed: 150 }
+      ];
+
+      starLayers.forEach(layer => {
+        const container = document.getElementById(layer.id);
+        if (!container) return;
+        
+        for (let i = 0; i < layer.count; i++) {
+          const star = document.createElement('div');
+          const size = Math.random() * (layer.size[1] - layer.size[0]) + layer.size[0];
+          
+          star.className = 'star';
+          star.style.width = `${size}px`;
+          star.style.height = `${size}px`;
+          star.style.background = `rgba(255, 255, 255, ${Math.random() * (layer.opacity[1] - layer.opacity[0]) + layer.opacity[0]})`;
+          star.style.boxShadow = `0 0 ${size * 2}px rgba(255, 255, 255, 0.8)`;
+          star.style.borderRadius = '50%';
+          star.style.position = 'absolute';
+          star.style.top = `${Math.random() * 100}%`;
+          star.style.left = `${Math.random() * 100}%`;
+          star.style.animation = `twinkle ${Math.random() * 5 + 3}s linear infinite alternate`;
+          
+          container.appendChild(star);
+        }
+      });
+    }
+
+    function animateStars() {
+      const style = document.createElement('style');
+      style.innerHTML = `
+        @keyframes twinkle {
+          0% {
+            opacity: 0.2;
+            transform: scale(0.8);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    // Parallax effect for planets
+    document.addEventListener('mousemove', (e) => {
+      const x = e.clientX / window.innerWidth;
+      const y = e.clientY / window.innerHeight;
+      
+      const planets = document.querySelectorAll('.planet');
+      
+      planets.forEach((planet, index) => {
+        const depth = 0.05 * (index + 1);
+        const moveX = (x - 0.5) * depth * 100;
+        const moveY = (y - 0.5) * depth * 100;
+        
+        planet.style.transform = `translate(${moveX}px, ${moveY}px)`;
+      });
+    });
+
+    function initializeApp() {
+      // Set page title
+      document.title = 'SIMBA - Satellite Image Analysis';
+      
+      // Simulated loading effect
+      const content = document.querySelector('.content-wrapper');
+      content.style.opacity = '0';
+      
+      setTimeout(() => {
+        content.style.transition = 'opacity 1.5s ease';
+        content.style.opacity = '1';
+      }, 500);
+    }
+
+    function setupEventListeners() {
+      // Start button functionality for English and Arabic buttons
+      const startButtonEn = document.getElementById('start-button-en');
+      const startButtonAr = document.getElementById('start-button-ar');
+
+      const handleButtonClick = (button) => {
+        button.addEventListener('mouseenter', () => {
+          button.style.transform = 'scale(1.05)';
+        });
+        
+        button.addEventListener('mouseleave', () => {
+          button.style.transform = 'scale(1)';
+        });
+        
+        button.addEventListener('click', () => {
+          // Add click animation
+          button.classList.add('clicked');
+          
+          // Transition effect before redirect
+          const content = document.querySelector('.content-wrapper');
+          content.style.transition = 'opacity 2s ease, transform 2s ease';
+          content.style.opacity = '0';
+          content.style.transform = 'scale(0.95)';
+          
+          // Simulate loading transition
+          document.body.style.overflow = 'hidden';
+          
+          // Redirect to chat  after animation completes
+          setTimeout(() => {
+            window.location.href = 'chat.html';
+          }, 2000);
+        });
+      };
+
+      if (startButtonEn) handleButtonClick(startButtonEn);
+      if (startButtonAr) handleButtonClick(startButtonAr);
+      
+      // Feature card hover effects
+      const features = document.querySelectorAll('.feature');
+      
+      features.forEach(feature => {
+        feature.addEventListener('mouseenter', () => {
+          feature.style.transform = 'translateY(-10px)';
+          feature.style.boxShadow = '0 10px 20px rgba(0, 0, 0, 0.3)';
+          feature.style.borderColor = 'var(--accent-cyan)';
+        });
+        
+        feature.addEventListener('mouseleave', () => {
+          feature.style.transform = 'translateY(0)';
+          feature.style.boxShadow = '0 0 0 rgba(0, 0, 0, 0.2)';
+          feature.style.borderColor = 'rgba(0, 238, 255, 0.2)';
+        });
+      });
+    }
+
+    // Add a simple loading indicator animation
+    window.addEventListener('load', () => {
+      // Create pulsing effect for the start button to draw attention
+      const startButtonEn = document.getElementById('start-button-en');
+      const startButtonAr = document.getElementById('start-button-ar');
+
+      if (startButtonEn) {
+        setTimeout(() => {
+          startButtonEn.style.animation = 'pulse 2s infinite';
+        }, 3000);
+      }
+      if (startButtonAr) {
+        setTimeout(() => {
+          startButtonAr.style.animation = 'pulse 2s infinite';
+        }, 3000);
+      }
+    });
+
+    // Add button pulse animation
+    const pulseStyle = document.createElement('style');
+    pulseStyle.innerHTML = `
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(0, 238, 255, 0.7);
+        }
+        70% {
+          box-shadow: 0 0 0 10px rgba(0, 238, 255, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(0, 238, 255, 0);
+        }
+      }
+      
+      .clicked {
+        animation: click 2s forwards !important;
+      }
+      
+      @keyframes click {
+        0% {
+          transform: scale(1.05);
+        }
+        50% {
+          transform: scale(0.95);
+        }
+        100% {
+          transform: scale(20);
+          opacity: 0;
+        }
+      }
+    `;
+    document.head.appendChild(pulseStyle);
+
+    // Language Toggle Logic
+    function initializeLanguageToggle() {
+        const langToggleBtn = document.getElementById('languageToggle');
+        const englishContent = document.getElementById('english-content');
+        const arabicContent = document.getElementById('arabic-content');
+
+        // Get stored language or default to English
+        let currentLang = localStorage.getItem('simbaLang') || 'en';
+
+        function setLanguage(lang) {
+            if (lang === 'ar') {
+                arabicContent.classList.add('active');
+                englishContent.classList.remove('active');
+                // You can change the icon to reflect the language, e.g., a text icon or a different globe variant
+                // For now, the globe icon remains the same.
+            } else {
+                englishContent.classList.add('active');
+                arabicContent.classList.remove('active');
+            }
+            localStorage.setItem('simbaLang', lang);
+            currentLang = lang;
+        }
+
+        // Set initial language based on stored preference or default
+        setLanguage(currentLang);
+
+        // Toggle language on button click
+        langToggleBtn.addEventListener('click', () => {
+            if (currentLang === 'en') {
+                setLanguage('ar');
+            } else {
+                setLanguage('en');
+            }
+        });
+    }
+  </script>
+</body>
+</html>
